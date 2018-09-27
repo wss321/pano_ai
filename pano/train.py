@@ -1,0 +1,82 @@
+from dataset import load_train_data, load_test_data
+import random
+import os
+import tensorflow as tf
+from keras import backend as K
+import keras
+from keras.models import load_model
+from keras.optimizers import SGD, Adam
+from keras.callbacks import ModelCheckpoint
+from keras.callbacks import TensorBoard, EarlyStopping
+from vgg_bn import VGG_BN
+from data_generator import DataGenerator, distorted_batch
+
+random.seed(0)
+tf.set_random_seed(0)
+if __name__ == '__main__':
+    TRAINING_DIR = 'output'
+    MODEL_FOLDER = r'{}/model/'.format(TRAINING_DIR)  # 模型保存地址
+    TB_LOG = '{}/log/'.format(TRAINING_DIR)  # tensorbord 文件地址
+    CKPT_PATH = '{}/checkoutpoint'.format(TRAINING_DIR)  # 查看点路径
+    BEST_CLASSIFY_CKPT_FILE = '{}/best_one.ckpt'.format(CKPT_PATH)
+    MODEL_DIR = '{}/dnn_classifier.h5'.format(MODEL_FOLDER)
+    OPTIMIZER = 'adam'
+
+    classifier_init_lr = 1e-4
+    vgg_norm_rate = 0.0
+    classifier_batch_size = 32
+    IMAGE_SIZE = 256
+    resize = 256
+    train_batch_size = 16
+
+    if not os.path.exists(MODEL_FOLDER):
+        os.makedirs(MODEL_FOLDER)
+    if not os.path.exists(TB_LOG):
+        os.makedirs(TB_LOG)
+    if not os.path.exists(CKPT_PATH):
+        os.makedirs(CKPT_PATH)
+
+    # model = VGG16(input_shape=(256, 256, 1), classes=5)
+
+    tf.reset_default_graph()
+    tfconfig = tf.ConfigProto()
+    tfconfig.gpu_options.allow_growth = True
+    session = tf.Session(config=tfconfig)
+    K.set_session(session)
+
+    # 回调函数
+    tensorboard = TensorBoard(log_dir=TB_LOG)
+    checkpoint = ModelCheckpoint(filepath=BEST_CLASSIFY_CKPT_FILE, monitor='val_acc', mode='auto',
+                                 save_best_only='True')
+    losscalback = keras.callbacks.ReduceLROnPlateau(monitor='loss', patience=1, verbose=1)
+    earlystop = EarlyStopping(monitor='val_loss', patience=10, verbose=0, mode='auto')
+    callback_lists = [earlystop, checkpoint, losscalback, tensorboard]
+
+    if OPTIMIZER == 'adam':
+        optm = Adam(classifier_init_lr)
+    else:
+        optm = SGD(lr=classifier_init_lr)
+
+    model = VGG_BN(5, norm_rate=vgg_norm_rate)
+    model.compile(optimizer=optm, loss='categorical_crossentropy', metrics=['accuracy'])  #
+    model.summary()
+
+    # 加载数据
+    print('Loading data....')
+    test_data, test_label = load_test_data()
+    train_data, train_label = load_train_data()
+    print('Done.')
+    x = K.placeholder(dtype=tf.float32, shape=(classifier_batch_size, IMAGE_SIZE, IMAGE_SIZE, 1))
+    distort_op = distorted_batch(x, IMAGE_SIZE, resize)
+    train_generator = DataGenerator(session, distort_op, x, train_data, train_label, batch_size=train_batch_size, distort=False,
+                                    shape=(IMAGE_SIZE, IMAGE_SIZE, 1))
+    train_data = None
+    # 训练
+    print('Training......')
+    h = model.fit_generator(generator=train_generator, verbose=1,
+                            epochs=30, callbacks=callback_lists, validation_data=(test_data, test_label))
+    # h = model.fit(x=train_data, y=train_label, epochs=30, validation_data=(test_data, test_label))
+    # callback_lists=callback_lists)
+    with open(os.path.join(TRAINING_DIR, 'train_history,txt'), 'a') as f:
+        f.write(str(h.history) + '\n')
+    model.save(MODEL_DIR)
