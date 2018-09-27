@@ -2,7 +2,6 @@ import tensorflow as tf
 from tensorflow.contrib.image import rotate
 import numpy as np
 import keras
-import scipy.misc
 
 NUM_CHANNELS = 1
 
