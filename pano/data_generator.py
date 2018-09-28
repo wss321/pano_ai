@@ -40,7 +40,7 @@ def random_rotate_image(image):
 def distort_image(image, image_size, resize):
     """Does random distortion at the training images to avoid overfitting"""
     # image = tf.image.resize_images(image, (resize, resize))
-    # image = tf.random_crop(image, [image_size, image_size, 3])
+    # image = tf.random_crop(image, [image_size, image_size, 1])
     image = tf.image.random_flip_left_right(image)
     image = random_rotate_image(image)
     image = tf.image.random_brightness(image,
@@ -69,9 +69,21 @@ def distorted_batch(batch, image_size, resize):
 class DataGenerator(keras.utils.Sequence):
     """Generates data for Keras"""
 
-    def __init__(self, session, distort_op, x_pc, data_X, data_Y, batch_size=32, shape=(64, 64, 3),
-                 n_classes=190, shuffle=True, distort=True, use_embedding=False):
-        """Initialization"""
+    def __init__(self, session, distort_op, x_pc, data_X, data_Y, batch_size=32, shape=(256, 256, 1),
+                 n_classes=190, shuffle=True, distort=True):
+        """
+            Initialize.
+        :param session: tensorflow sesion.
+        :param distort_op: tensorflow operation for distorting images.
+        :param x_pc: tensorflow placeholder for feed data.
+        :param data_X: X
+        :param data_Y: label
+        :param batch_size: batch size
+        :param shape: image shape
+        :param n_classes: the number of classes in DataSet
+        :param shuffle: shuffle the order
+        :param distort: whether distort
+        """
         self.shape = shape
         self.batch_size = batch_size
         self.data_X = data_X
@@ -79,7 +91,6 @@ class DataGenerator(keras.utils.Sequence):
         self.n_classes = n_classes
         self.shuffle = shuffle
         self.distort = distort
-        self.use_embedding = use_embedding
         self.session = session
         self.distort_op = distort_op
         self.x_pc = x_pc

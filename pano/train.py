@@ -57,7 +57,8 @@ if __name__ == '__main__':
     else:
         optm = SGD(lr=classifier_init_lr)
 
-    model = VGG_BN(5, norm_rate=vgg_norm_rate)
+    model = VGG_BN(num_class=5, input_shape=(256, 256, 1), filters=[16, 32, 32, 64, 64], layer_num=[1, 1, 2, 2, 3],
+                   norm_rate=vgg_norm_rate)
     # model = DenseNet((IMAGE_SIZE, IMAGE_SIZE, 1), depth=64, nb_dense_block=4,
     #                  growth_rate=12, bottleneck=True, dropout_rate=0.2, reduction=0.0,
     #                  classes=5)
