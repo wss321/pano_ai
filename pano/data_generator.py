@@ -47,8 +47,8 @@ def distort_image(image, image_size, resize):
                                        max_delta=30.0/255.0)
     # image = tf.image.random_contrast(image,
     #                                  lower=0.2, upper=1.8)
-    image = distort_color(image, np.random.randint(4))
-    # 随机边框裁剪
+    # image = distort_color(image, np.random.randint(4))
+    # # 随机边框裁剪
     # bbox = tf.constant([0.0, 0.0, 1.0, 1.0], dtype=tf.float32, shape=[1, 1, 4])
     # bbox_begin, bbox_size, _ = tf.image.sample_distorted_bounding_box(tf.shape(image), bounding_boxes=bbox)
     # # 随机噪声

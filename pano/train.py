@@ -10,6 +10,7 @@ from keras.callbacks import ModelCheckpoint
 from keras.callbacks import TensorBoard, EarlyStopping
 from vgg_bn import VGG_BN
 from data_generator import DataGenerator, distorted_batch, NUM_CHANNELS
+from fine_tune import fine_tune_inceptionV3, fine_tune_densenet121, fine_tune_VGG19
 from densenet import DenseNet
 
 random.seed(0)
@@ -56,10 +57,11 @@ if __name__ == '__main__':
         optm = Adam(classifier_init_lr)
     else:
         optm = SGD(lr=classifier_init_lr)
-
-    model = VGG_BN(num_class=5, input_shape=(256, 256, NUM_CHANNELS), filters=[16, 32, 32, 64, 64],
-                   layer_num=[1, 1, 2, 2, 3],
-                   norm_rate=vgg_norm_rate)
+    model = fine_tune_densenet121()
+    # model = fine_tune_inceptionV3()
+    # model = VGG_BN(num_class=5, input_shape=(256, 256, NUM_CHANNELS), filters=[16, 32, 32, 64, 64],
+    #                layer_num=[1, 1, 2, 2, 3],
+    #                norm_rate=vgg_norm_rate)
     # model = DenseNet((IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS), depth=64, nb_dense_block=4,
     #                  growth_rate=12, bottleneck=True, dropout_rate=0.2, reduction=0.0,
     #                  classes=5)
@@ -68,7 +70,7 @@ if __name__ == '__main__':
 
     # 加载数据
     print('Loading data....')
-    if NUM_CHANNELS==3:
+    if NUM_CHANNELS == 3:
         test_data, test_label = load_test_data_3C()
         train_data, train_label = load_train_data_3C()
     else:

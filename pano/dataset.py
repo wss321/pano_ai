@@ -10,7 +10,7 @@ def pares_tf(example_proto):
                 "data": tf.FixedLenFeature((256, 256), tf.float32),
                 "label": tf.FixedLenFeature((), tf.int64)}
     parsed_features = tf.parse_single_example(example_proto, features)
-    return parsed_features["id"], tf.one_hot(parsed_features["label"], 5), parsed_features["data"]
+    return parsed_features["id"], tf.one_hot(parsed_features["label"]-1, 5), parsed_features["data"]
 
 
 def get_train_batch_iterator(batch_size, repeat=1, shuffle_buffer_size=10000):
@@ -110,7 +110,15 @@ def load_test_data_1C():
 
 
 if __name__ == '__main__':
-    test_data, test_label = load_test_data_3C()
+    # test_data, test_label = load_test_data_3C()
     train_data, train_label = load_train_data_3C()
-    # print(test_data, test_label)
-    print(train_data, train_label)
+    # # print(test_data, test_label)
+    # print(train_data, train_label)
+    all = [0, 0, 0, 0, 0]
+    for i in train_label:
+        for k, j in enumerate(i):
+            if j == 1.0:
+                all[k] += 1
+                break
+    print(train_label)
+    print(all)
