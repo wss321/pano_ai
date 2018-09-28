@@ -39,8 +39,8 @@ def random_rotate_image(image):
 
 def distort_image(image, image_size, resize):
     """Does random distortion at the training images to avoid overfitting"""
-    image = tf.image.resize_images(image, (resize, resize))
-    image = tf.random_crop(image, [image_size, image_size, 3])
+    # image = tf.image.resize_images(image, (resize, resize))
+    # image = tf.random_crop(image, [image_size, image_size, 3])
     image = tf.image.random_flip_left_right(image)
     image = random_rotate_image(image)
     image = tf.image.random_brightness(image,

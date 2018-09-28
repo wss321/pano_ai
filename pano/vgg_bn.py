@@ -1,5 +1,6 @@
 from keras import Model
-from keras.layers import Flatten, Dense, Input, Convolution2D, MaxPooling2D, BatchNormalization, Activation
+from keras.layers import Flatten, Dense, Input, Convolution2D, MaxPooling2D, BatchNormalization, Activation, \
+    GlobalAveragePooling2D
 from keras import regularizers
 
 # size of pooling area for max pooling
@@ -8,9 +9,9 @@ _stride = (2, 2)
 # convolution kernel size
 _kernel_size = (3, 3)
 
-_filters = [16, 32, 32, 64, 128, 128]
-_layer_num = [1, 1, 2, 2, 3, 3]
-_name = ['Conv{}'.format(i+1) for i in range(6)]
+_filters = [16, 32, 32, 64, 128]
+_layer_num = [1, 1, 2, 2, 3]
+_name = ['Conv{}'.format(i + 1) for i in range(5)]
 
 
 def _conv_act_bn(inputs, filters, name, kernel_size=(3, 3), norm_rate=0.0, padding='same'):
@@ -35,9 +36,10 @@ def _block(layer_num, inputs, filters, name, kernel_size=(3, 3), norm_rate=0.0, 
 def VGG_BN(num_class, input_shape=(256, 256, 1,), norm_rate=0.0):
     inputs = Input(shape=input_shape, name='input')
     x = inputs
-    for i in range(6):
+    for i in range(len(_name)):
         x = _block(layer_num=_layer_num[i], inputs=x, filters=_filters[i], name=_name[i])
-    x = Flatten()(x)
+    x = GlobalAveragePooling2D()(x)
+    # x = Flatten()(x)
 
     x = Dense(1024, kernel_regularizer=regularizers.l2(norm_rate))(x)
     x = Activation('relu')(x)

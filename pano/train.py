@@ -10,6 +10,7 @@ from keras.callbacks import ModelCheckpoint
 from keras.callbacks import TensorBoard, EarlyStopping
 from vgg_bn import VGG_BN
 from data_generator import DataGenerator, distorted_batch
+from densenet import DenseNet
 
 random.seed(0)
 tf.set_random_seed(0)
@@ -24,10 +25,9 @@ if __name__ == '__main__':
 
     classifier_init_lr = 1e-4
     vgg_norm_rate = 0.0
-    classifier_batch_size = 32
     IMAGE_SIZE = 256
     resize = 256
-    train_batch_size = 16
+    train_batch_size = 32
 
     if not os.path.exists(MODEL_FOLDER):
         os.makedirs(MODEL_FOLDER)
@@ -58,6 +58,9 @@ if __name__ == '__main__':
         optm = SGD(lr=classifier_init_lr)
 
     model = VGG_BN(5, norm_rate=vgg_norm_rate)
+    # model = DenseNet((IMAGE_SIZE, IMAGE_SIZE, 1), depth=64, nb_dense_block=4,
+    #                  growth_rate=12, bottleneck=True, dropout_rate=0.2, reduction=0.0,
+    #                  classes=5)
     model.compile(optimizer=optm, loss='categorical_crossentropy', metrics=['accuracy'])  #
     model.summary()
 
@@ -66,9 +69,10 @@ if __name__ == '__main__':
     test_data, test_label = load_test_data()
     train_data, train_label = load_train_data()
     print('Done.')
-    x = K.placeholder(dtype=tf.float32, shape=(classifier_batch_size, IMAGE_SIZE, IMAGE_SIZE, 1))
+    x = K.placeholder(dtype=tf.float32, shape=(train_batch_size, IMAGE_SIZE, IMAGE_SIZE, 1))
     distort_op = distorted_batch(x, IMAGE_SIZE, resize)
-    train_generator = DataGenerator(session, distort_op, x, train_data, train_label, batch_size=train_batch_size, distort=False,
+    train_generator = DataGenerator(session, distort_op, x, train_data, train_label, batch_size=train_batch_size,
+                                    distort=False,
                                     shape=(IMAGE_SIZE, IMAGE_SIZE, 1))
     train_data = None
     # 训练
@@ -78,5 +82,6 @@ if __name__ == '__main__':
     # h = model.fit(x=train_data, y=train_label, epochs=30, validation_data=(test_data, test_label))
     # callback_lists=callback_lists)
     with open(os.path.join(TRAINING_DIR, 'train_history,txt'), 'a') as f:
-        f.write(str(h.history) + '\n')
+        for key, value in h.history.items():
+            f.write('{}:{}\n'.format(key, str(value)))
     model.save(MODEL_DIR)
