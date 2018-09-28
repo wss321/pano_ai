@@ -76,10 +76,6 @@ if __name__ == '__main__':
     else:
         test_data, test_label = load_test_data_1C()
         train_data, train_label = load_train_data_1C()
-    # test_data = session.run(tf.image.resize_images(test_data, [IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS]))
-    # if NUM_CHANNELS == 3:
-    #     for i in test_data_temp:
-    #         p = [i, i, i]
     print(train_data.shape)
     print(test_data.shape)
 
@@ -90,6 +86,15 @@ if __name__ == '__main__':
                                     distort=True,
                                     shape=(IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS))
     train_data = None
+    train_ = train_generator.__getitem__(1)
+    from dataset import visualize_image
+
+    print(train_[0][0][:, :, 1].shape)
+    for i in range(10):
+        visualize_image(train_[0][i][:, :, 1].reshape(256, 256, 1))
+
+
+
     # 训练
     print('Training......')
     h = model.fit_generator(generator=train_generator, verbose=1,
@@ -100,3 +105,27 @@ if __name__ == '__main__':
         for key, value in h.history.items():
             f.write('{}:{}\n'.format(key, str(value)))
     model.save(MODEL_DIR)
+
+    # from fine_tune import VGG16
+    # from dataset import get_sample_train_data
+    # from LTC import get_concentrate_rp, LTC_BN
+    # from data_generator import LTC_DataGenerator
+    #
+    # print('Loading data...')
+    # sample_data, _, train_data, train_label = get_sample_train_data(20)
+    # print('Done.')
+    #
+    # base_model = VGG16(input_shape=(256, 256, 3), weights='imagenet', include_top=False)
+    # print('Getting relation data...')
+    # relate_pair, relation_label = get_concentrate_rp(base_model, train_data, sample_data, train_label)
+    # ltc_datagenerator = LTC_DataGenerator(relate_pair, relation_label, batch_size=16,
+    #                                       shape=(relate_pair.shape[1], relate_pair.shape[2], relate_pair.shape[3]))
+    # sample_data, train_data, train_label = None, None, None
+    # print('Done.')
+    # print(relate_pair.shape)
+    # print(relation_label.shape)
+    # model = LTC_BN(input_shape=(relate_pair.shape[1], relate_pair.shape[2], relate_pair.shape[3]), num_class=5)
+    # optimizer = Adam(1e-4)
+    # model.compile(optimizer=optimizer, loss='mse', metrics=['accuracy'])  #
+    # model.summary()
+    # h = model.fit_generator(generator=ltc_datagenerator, epochs=30)

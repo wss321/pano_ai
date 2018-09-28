@@ -66,6 +66,8 @@ if __name__ == '__main__':
     from keras.optimizers import Adam
 
     model = VGG_BN(5, filters=[16, 32, 32, 64, 128], layer_num=[1, 1, 2, 2, 3], norm_rate=0.0)
+
     optimizer = Adam(1e-4)
     model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])  #
     model.summary()
+    print(model.output.shape)

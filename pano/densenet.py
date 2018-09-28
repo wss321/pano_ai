@@ -34,6 +34,7 @@ DENSENET_121_WEIGHTS_PATH_NO_TOP = r'https://github.com/titu1994/DenseNet/releas
 DENSENET_161_WEIGHTS_PATH_NO_TOP = r'https://github.com/titu1994/DenseNet/releases/download/v3.0/DenseNet-BC-161-48-no-top.h5'
 DENSENET_169_WEIGHTS_PATH_NO_TOP = r'https://github.com/titu1994/DenseNet/releases/download/v3.0/DenseNet-BC-169-32-no-top.h5'
 
+
 def preprocess_input(x, data_format=None):
     """Preprocesses a tensor encoding a batch of images.
     # Arguments
@@ -67,7 +68,7 @@ def preprocess_input(x, data_format=None):
         x[..., 1] -= 116.779
         x[..., 2] -= 123.68
 
-    x *= 0.017 # scale values
+    x *= 0.017  # scale values
 
     return x
 
@@ -763,7 +764,8 @@ def __create_fcn_dense_net(nb_classes, img_input, include_top, nb_dense_block=5,
         x = concatenate([t, skip_list[block_idx]], axis=concat_axis)
 
         # Dont allow the feature map size to grow in upsampling dense blocks
-        x_up, nb_filter, concat_list = __dense_block(x, nb_layers[nb_dense_block + block_idx + 1], nb_filter=growth_rate,
+        x_up, nb_filter, concat_list = __dense_block(x, nb_layers[nb_dense_block + block_idx + 1],
+                                                     nb_filter=growth_rate,
                                                      growth_rate=growth_rate, dropout_rate=dropout_rate,
                                                      weight_decay=weight_decay, return_concat_list=True,
                                                      grow_nb_filters=False)
@@ -785,15 +787,13 @@ def __create_fcn_dense_net(nb_classes, img_input, include_top, nb_dense_block=5,
     return x
 
 
-
-
 if __name__ == '__main__':
-
     from keras.utils.vis_utils import plot_model
-    #model = DenseNetFCN((32, 32, 3), growth_rate=16, nb_layers_per_block=[4, 5, 7, 10, 12, 15], upsampling_type='deconv')
+
+    # model = DenseNetFCN((32, 32, 3), growth_rate=16, nb_layers_per_block=[4, 5, 7, 10, 12, 15], upsampling_type='deconv')
     model = DenseNet((32, 32, 3), depth=100, nb_dense_block=3,
                      growth_rate=12, bottleneck=True, reduction=0.5, weights=None)
     model.summary()
 
     from keras.callbacks import ModelCheckpoint, TensorBoard
-    #plot_model(model, 'test.png', show_shapes=True)
+    # plot_model(model, 'test.png', show_shapes=True)

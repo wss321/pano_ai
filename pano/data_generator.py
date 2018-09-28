@@ -44,9 +44,9 @@ def distort_image(image, image_size, resize):
     image = tf.image.random_flip_left_right(image)
     image = random_rotate_image(image)
     image = tf.image.random_brightness(image,
-                                       max_delta=30.0/255.0)
-    # image = tf.image.random_contrast(image,
-    #                                  lower=0.2, upper=1.8)
+                                       max_delta=30.0)
+    image = tf.image.random_contrast(image,
+                                     lower=0.2, upper=1.8)
     # image = distort_color(image, np.random.randint(4))
     # # 随机边框裁剪
     # bbox = tf.constant([0.0, 0.0, 1.0, 1.0], dtype=tf.float32, shape=[1, 1, 4])
@@ -55,7 +55,7 @@ def distort_image(image, image_size, resize):
     # image = tf.slice(image, bbox_begin, bbox_size)
     rand = np.random.randint(100)
     if rand < 20:
-        noise = tf.random_normal(shape=tf.shape(image), mean=0.0, stddev=1.0/255.0, dtype=tf.float32)
+        noise = tf.random_normal(shape=tf.shape(image), mean=0.0, stddev=1.0 / 255.0, dtype=tf.float32)
         image = tf.add(image, noise)
     # float_image = tf.image.per_image_standardization(image)
     return image
@@ -70,7 +70,7 @@ class DataGenerator(keras.utils.Sequence):
     """Generates data for Keras"""
 
     def __init__(self, session, distort_op, x_pc, data_X, data_Y, batch_size=32, shape=(256, 256, 3),
-                 n_classes=190, shuffle=True, distort=True):
+                 n_classes=5, shuffle=True, distort=True):
         """
             Initialize.
         :param session: tensorflow sesion.
@@ -125,5 +125,59 @@ class DataGenerator(keras.utils.Sequence):
         Xs = [b_X for b_X in X]
         if self.distort:
             Xs = self.session.run(self.distort_op, feed_dict={self.x_pc: Xs})
+        Ys = [b_Y for b_Y in Y]
+        return np.asarray(Xs).reshape(-1, self.shape[0], self.shape[1], self.shape[2]), np.asarray(Ys)
+
+
+class LTC_DataGenerator(keras.utils.Sequence):
+    """Generates data for Keras"""
+
+    def __init__(self, data_X, data_Y, batch_size=32, shape=(256, 256, 3),
+                 n_classes=5, shuffle=True):
+        """
+            Initialize.
+
+        :param data_X: X
+        :param data_Y: label
+        :param batch_size: batch size
+        :param shape: image shape
+        :param n_classes: the number of classes in DataSet
+        :param shuffle: shuffle the order
+        """
+        self.shape = shape
+        self.batch_size = batch_size
+        self.data_X = data_X
+        self.data_Y = data_Y
+        self.n_classes = n_classes
+        self.shuffle = shuffle
+        self.indexes = np.arange(len(self.data_X))
+        self.on_epoch_end()
+
+    def __len__(self):
+        """Denotes the number of batches per epoch"""
+        return int(np.floor(len(self.data_X) / self.batch_size))
+
+    def __getitem__(self, index):
+        """Generate one batch of data"""
+        # Generate indexes of the batch
+        batch_indexs = self.indexes[index * self.batch_size:(index + 1) * self.batch_size]
+
+        # Find list of IDs
+        batch_data_X = [self.data_X[k] for k in batch_indexs]
+        batch_data_Y = [self.data_Y[k] for k in batch_indexs]
+
+        # Generate data
+        X, y = self.__data_generation(batch_data_X, batch_data_Y)
+        return X, y
+
+    def on_epoch_end(self):
+        """Updates indexes after each epoch"""
+        if self.shuffle:
+            np.random.shuffle(self.indexes)
+
+    def __data_generation(self, X, Y):
+        """Generates data containing batch_size samples"""
+        # Generate data
+        Xs = [b_X for b_X in X]
         Ys = [b_Y for b_Y in Y]
         return np.asarray(Xs).reshape(-1, self.shape[0], self.shape[1], self.shape[2]), np.asarray(Ys)
