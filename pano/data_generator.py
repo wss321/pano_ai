@@ -3,7 +3,7 @@ from tensorflow.contrib.image import rotate
 import numpy as np
 import keras
 
-NUM_CHANNELS = 1
+NUM_CHANNELS = 3
 
 
 def distort_color(image, color_ordering=0):
@@ -39,23 +39,23 @@ def random_rotate_image(image):
 
 def distort_image(image, image_size, resize):
     """Does random distortion at the training images to avoid overfitting"""
-    # image = tf.image.resize_images(image, (resize, resize))
-    # image = tf.random_crop(image, [image_size, image_size, 1])
+    image = tf.image.resize_images(image, (resize, resize))
+    image = tf.random_crop(image, [image_size, image_size, NUM_CHANNELS])
     image = tf.image.random_flip_left_right(image)
     image = random_rotate_image(image)
     image = tf.image.random_brightness(image,
-                                       max_delta=30)
-    image = tf.image.random_contrast(image,
-                                     lower=0.2, upper=1.8)
+                                       max_delta=30.0/255.0)
+    # image = tf.image.random_contrast(image,
+    #                                  lower=0.2, upper=1.8)
     image = distort_color(image, np.random.randint(4))
     # 随机边框裁剪
-    bbox = tf.constant([0.0, 0.0, 1.0, 1.0], dtype=tf.float32, shape=[1, 1, 4])
-    bbox_begin, bbox_size, _ = tf.image.sample_distorted_bounding_box(tf.shape(image), bounding_boxes=bbox)
-    # 随机噪声
-    image = tf.slice(image, bbox_begin, bbox_size)
+    # bbox = tf.constant([0.0, 0.0, 1.0, 1.0], dtype=tf.float32, shape=[1, 1, 4])
+    # bbox_begin, bbox_size, _ = tf.image.sample_distorted_bounding_box(tf.shape(image), bounding_boxes=bbox)
+    # # 随机噪声
+    # image = tf.slice(image, bbox_begin, bbox_size)
     rand = np.random.randint(100)
     if rand < 20:
-        noise = tf.random_normal(shape=tf.shape(image), mean=0.0, stddev=1.0, dtype=tf.float32)
+        noise = tf.random_normal(shape=tf.shape(image), mean=0.0, stddev=1.0/255.0, dtype=tf.float32)
         image = tf.add(image, noise)
     # float_image = tf.image.per_image_standardization(image)
     return image
@@ -69,7 +69,7 @@ def distorted_batch(batch, image_size, resize):
 class DataGenerator(keras.utils.Sequence):
     """Generates data for Keras"""
 
-    def __init__(self, session, distort_op, x_pc, data_X, data_Y, batch_size=32, shape=(256, 256, 1),
+    def __init__(self, session, distort_op, x_pc, data_X, data_Y, batch_size=32, shape=(256, 256, 3),
                  n_classes=190, shuffle=True, distort=True):
         """
             Initialize.

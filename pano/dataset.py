@@ -14,7 +14,6 @@ def pares_tf(example_proto):
 
 
 def get_train_batch_iterator(batch_size, repeat=1, shuffle_buffer_size=10000):
-    file_dir = '../datas/pano'
     file_path = [os.path.join(file_dir, 'TFcodeX_{}.tfrecord'.format(i)) for i in range(1, 9)]
     pano = tf.data.TFRecordDataset([file_path])
     pano = pano.map(pares_tf)
@@ -30,8 +29,7 @@ def get_train_batch_iterator(batch_size, repeat=1, shuffle_buffer_size=10000):
     return iterator
 
 
-def get_test_one_shaot(shuffle_buffer_size=10000):
-    file_dir = '../datas/pano'
+def get_test_one_shot(shuffle_buffer_size=10000):
     file_path = [os.path.join(file_dir, 'TFcodeX_{}.tfrecord'.format(i)) for i in range(9, 11)]
     pano = tf.data.TFRecordDataset([file_path])
     pano = pano.map(pares_tf)
@@ -42,7 +40,6 @@ def get_test_one_shaot(shuffle_buffer_size=10000):
 
 
 def get_train_one_shot(shuffle_buffer_size=10000):
-    file_dir = '../datas/pano'
     file_path = [os.path.join(file_dir, 'TFcodeX_{}.tfrecord'.format(i)) for i in range(1, 9)]
     pano = tf.data.TFRecordDataset([file_path])
     pano = pano.map(pares_tf)
@@ -52,8 +49,8 @@ def get_train_one_shot(shuffle_buffer_size=10000):
     return pano.make_one_shot_iterator().get_next()
 
 
-def load_test_data():
-    test_iterator = get_test_one_shaot()
+def load_test_data_3C():
+    test_iterator = get_test_one_shot()
     labels = []
     test_data = []
     with tf.Session() as sess:
@@ -61,13 +58,28 @@ def load_test_data():
             try:
                 id, one_hot_label, img = sess.run(test_iterator)
                 labels.append(one_hot_label)
-                test_data.append(img)
+                test_data.append([img, img, img])
             except:
                 break
-    return np.asarray(test_data).reshape(-1, 256, 256, 1), np.asarray(labels)
+    return np.asarray(test_data).reshape(-1, 256, 256, 3), np.asarray(labels)
 
 
-def load_train_data():
+def load_train_data_3C():
+    test_iterator = get_train_one_shot()
+    labels = []
+    test_data = []
+    with tf.Session() as sess:
+        while True:
+            try:
+                id, one_hot_label, img = sess.run(test_iterator)
+                labels.append(one_hot_label)
+                test_data.append([img, img, img])
+            except:
+                break
+    return np.asarray(test_data).reshape(-1, 256, 256, 3), np.asarray(labels)
+
+
+def load_train_data_1C():
     test_iterator = get_train_one_shot()
     labels = []
     test_data = []
@@ -82,8 +94,23 @@ def load_train_data():
     return np.asarray(test_data).reshape(-1, 256, 256, 1), np.asarray(labels)
 
 
+def load_test_data_1C():
+    test_iterator = get_test_one_shot()
+    labels = []
+    test_data = []
+    with tf.Session() as sess:
+        while True:
+            try:
+                id, one_hot_label, img = sess.run(test_iterator)
+                labels.append(one_hot_label)
+                test_data.append(img)
+            except:
+                break
+    return np.asarray(test_data).reshape(-1, 256, 256, 1), np.asarray(labels)
+
+
 if __name__ == '__main__':
-    test_data, test_label = load_test_data()
-    train_data, train_label = load_train_data()
+    test_data, test_label = load_test_data_3C()
+    train_data, train_label = load_train_data_3C()
     # print(test_data, test_label)
     print(train_data, train_label)

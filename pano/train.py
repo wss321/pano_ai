@@ -1,4 +1,4 @@
-from dataset import load_train_data, load_test_data
+from dataset import load_train_data_3C, load_test_data_3C, load_test_data_1C, load_train_data_1C
 import random
 import os
 import tensorflow as tf
@@ -9,7 +9,7 @@ from keras.optimizers import SGD, Adam
 from keras.callbacks import ModelCheckpoint
 from keras.callbacks import TensorBoard, EarlyStopping
 from vgg_bn import VGG_BN
-from data_generator import DataGenerator, distorted_batch
+from data_generator import DataGenerator, distorted_batch, NUM_CHANNELS
 from densenet import DenseNet
 
 random.seed(0)
@@ -57,9 +57,10 @@ if __name__ == '__main__':
     else:
         optm = SGD(lr=classifier_init_lr)
 
-    model = VGG_BN(num_class=5, input_shape=(256, 256, 1), filters=[16, 32, 32, 64, 64], layer_num=[1, 1, 2, 2, 3],
+    model = VGG_BN(num_class=5, input_shape=(256, 256, NUM_CHANNELS), filters=[16, 32, 32, 64, 64],
+                   layer_num=[1, 1, 2, 2, 3],
                    norm_rate=vgg_norm_rate)
-    # model = DenseNet((IMAGE_SIZE, IMAGE_SIZE, 1), depth=64, nb_dense_block=4,
+    # model = DenseNet((IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS), depth=64, nb_dense_block=4,
     #                  growth_rate=12, bottleneck=True, dropout_rate=0.2, reduction=0.0,
     #                  classes=5)
     model.compile(optimizer=optm, loss='categorical_crossentropy', metrics=['accuracy'])  #
@@ -67,14 +68,25 @@ if __name__ == '__main__':
 
     # 加载数据
     print('Loading data....')
-    test_data, test_label = load_test_data()
-    train_data, train_label = load_train_data()
+    if NUM_CHANNELS==3:
+        test_data, test_label = load_test_data_3C()
+        train_data, train_label = load_train_data_3C()
+    else:
+        test_data, test_label = load_test_data_1C()
+        train_data, train_label = load_train_data_1C()
+    # test_data = session.run(tf.image.resize_images(test_data, [IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS]))
+    # if NUM_CHANNELS == 3:
+    #     for i in test_data_temp:
+    #         p = [i, i, i]
+    print(train_data.shape)
+    print(test_data.shape)
+
     print('Done.')
-    x = K.placeholder(dtype=tf.float32, shape=(train_batch_size, IMAGE_SIZE, IMAGE_SIZE, 1))
+    x = K.placeholder(dtype=tf.float32, shape=(train_batch_size, IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS))
     distort_op = distorted_batch(x, IMAGE_SIZE, resize)
     train_generator = DataGenerator(session, distort_op, x, train_data, train_label, batch_size=train_batch_size,
-                                    distort=False,
-                                    shape=(IMAGE_SIZE, IMAGE_SIZE, 1))
+                                    distort=True,
+                                    shape=(IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS))
     train_data = None
     # 训练
     print('Training......')

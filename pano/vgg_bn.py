@@ -1,6 +1,6 @@
 from keras import Model
 from keras.layers import Flatten, Dense, Input, Convolution2D, MaxPooling2D, BatchNormalization, Activation, \
-    GlobalAveragePooling2D
+    GlobalAveragePooling2D, AveragePooling2D
 from keras import regularizers
 
 # size of pooling area for max pooling
@@ -8,9 +8,6 @@ _pool_size = (2, 2)
 _stride = (2, 2)
 # convolution kernel size
 _kernel_size = (3, 3)
-
-_filters = [16, 32, 32, 64, 128]
-_layer_num = [1, 1, 2, 2, 3]
 
 
 def _conv_act_bn(inputs, filters, name, kernel_size=(3, 3), norm_rate=0.0, padding='same'):
@@ -51,8 +48,8 @@ def VGG_BN(num_class, filters, layer_num, input_shape=(256, 256, 1,), norm_rate=
     x = inputs
     for i in range(len(layer_num)):
         x = _block(layer_num=layer_num[i], inputs=x, filters=filters[i], name=name[i])
-    x = GlobalAveragePooling2D()(x)
-
+    x = AveragePooling2D()(x)
+    x = Flatten()(x)
     x = Dense(1024, kernel_regularizer=regularizers.l2(norm_rate))(x)
     x = Activation('relu')(x)
     x = BatchNormalization()(x)
@@ -68,7 +65,7 @@ def VGG_BN(num_class, filters, layer_num, input_shape=(256, 256, 1,), norm_rate=
 if __name__ == '__main__':
     from keras.optimizers import Adam
 
-    model = VGG_BN(205, filters=[16, 32, 32, 64, 128], layer_num=[1, 1, 2, 2, 3], norm_rate=0.0)
+    model = VGG_BN(5, filters=[16, 32, 32, 64, 128], layer_num=[1, 1, 2, 2, 3], norm_rate=0.0)
     print("DONE.")
     optimizer = Adam(1e-4)
     model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])  #
