@@ -114,11 +114,11 @@ if __name__ == '__main__':
     train_data, train_label = load_train_data_3C()
     # # print(test_data, test_label)
     # print(train_data, train_label)
-    all = [0, 0, 0, 0, 0]
+    train_label_sum = [0, 0, 0, 0, 0]
     for i in train_label:
         for k, j in enumerate(i):
             if j == 1.0:
-                all[k] += 1
+                train_label_sum[k] += 1
                 break
     print(train_label)
-    print(all)
+    print(train_label_sum)
